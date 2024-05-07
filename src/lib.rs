@@ -3,8 +3,6 @@ use bevy::prelude::*;
 mod components;
 mod player;
 
-const X_EXTENT: f32 = 600.;
-
 pub struct Lithium;
 
 impl Plugin for Lithium {
@@ -14,6 +12,7 @@ impl Plugin for Lithium {
     }
 }
 
+// TODO: Change camera to follow player - move to it's own module
 fn startup(
     mut commands: Commands,
 ) {

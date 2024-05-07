@@ -1,14 +1,24 @@
 use bevy::{
-    ecs::{event::EventReader, query::With, system::Query},
+    asset::Assets,
+    ecs::{
+        event::EventReader,
+        query::With,
+        system::{Commands, Query, ResMut},
+    },
     input::{
         keyboard::{KeyCode, KeyboardInput},
-        ButtonState,
+        mouse::MouseButtonInput,
     },
+    math::{primitives::Triangle2d, Vec2},
+    render::{color::Color, mesh::Mesh},
+    sprite::{ColorMaterial, MaterialMesh2dBundle, Mesh2dHandle},
+    transform::components::Transform,
+    window::{PrimaryWindow, Window},
 };
 
 use crate::components::{MovementDirection, Position, Velocity};
 
-use super::player_components::Player;
+use super::player_components::{self, Player, PlayerDirection};
 
 const VELOCITY: f32 = 20.0;
 const MAX_VELOCITY: f32 = 300.0;
@@ -34,4 +44,39 @@ pub fn keyboard_events(
             velocity.0 += VELOCITY;
         }
     }
+}
+
+pub fn mouse_events(
+    mut player_query: Query<(&mut Velocity, &Position), With<Player>>,
+    mut commands: Commands,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    let (mut velocity, position) = player_query.get_single_mut().unwrap();
+
+    let cursor_position = window_query
+        .get_single()
+        .unwrap()
+        .cursor_position()
+        .unwrap();
+
+    const CONE_WIDTH: f32 = 20.0;
+    let player_aim = player_components::PlayerAim;
+    let vertices = vec![
+        Vec2::new(cursor_position.x, cursor_position.y + CONE_WIDTH),
+        Vec2::new(cursor_position.x, cursor_position.y + CONE_WIDTH),
+        Vec2::new(position.0.x, position.0.y),
+    ];
+
+    commands.spawn((
+        // Player cube
+        MaterialMesh2dBundle {
+            mesh: Mesh2dHandle(meshes.add(Triangle2d::new(vertices[0], vertices[1], vertices[2]))),
+            material: materials.add(Color::BLUE),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..Default::default()
+        },
+        player_aim,
+    ));
 }
