@@ -6,6 +6,7 @@ use bevy::{
 pub mod player;
 pub mod enemies;
 pub mod ui;
+pub mod weapons;
 
 #[derive(Component)]
 pub struct Position {

@@ -5,7 +5,7 @@ use bevy::{
 };
 use bevy::utils::default;
 
-use crate::components::{player::{Actions, Player, PlayerAim, PlayerCursor, PlayerKeyboardControls}, Health, Position};
+use crate::{components::{player::{Actions, Player, PlayerAim, PlayerCamera, PlayerCursor, PlayerKeyboardControls}, weapons::Weapon, Health, Position}, systems::camera::update_camera};
 
 pub struct LithiumPlayerSystem;
 
@@ -72,13 +72,15 @@ fn initiliaze_player(
 fn update_player(
     time: Res<Time>,
     mut query: Query<(&mut Transform, &PlayerKeyboardControls, &mut Position), With<Player>>,
+    camera_query: Query<&mut Transform, With<PlayerCamera>>,
 ) {
     let delta_time = time.delta_seconds();
+    let camera_transform = camera_query.single();
 
     // TODO: Change speed and add some form of drag
     let speed = 1000.0;
 
-    const ERROR_MSG: &str = "At least one of the four movement direction's keyboard keys was not set when updating the player!";
+    const ERROR_MSG: &str = "At least one of the four movement direction's keyboard keys was not set by the time the player get's updated!";
 
     for (mut transform, controls, mut position) in &mut query {
         // TODO: CHANGE - just adapted from the first iteration.
@@ -97,6 +99,9 @@ fn update_player(
         // Apply the transfrom for the new position
         // TODO: Think about implementing z-ordering
         transform.translation += Vec3::new(delta_position.x, delta_position.y, 0.0);
+
+        // Update camera to the player's new position
+        update_camera(position.value, *camera_transform);
     }
 }
 
@@ -112,43 +117,24 @@ fn update_player_aim(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    // TODO: This should be some sort of accuracy in the future, based on weapon.
-    // For now just a constant width of the aiming triangle
-    const CONE_HALF_WIDTH: f32 = 100.0;
-
-    // TODO: This should be weapon range
-    const CONE_LENGTH:f32 = 500.0;
+    // HACK: This is a placeholder so that we can use the WeaponStats struct
+    // without any weapon systems
+    let weapon = Weapon::new(15.0, 20.0, 0.33, 2.0, 500.0, 200.0, 0.0);
 
     // There should only be one entity, as we clear them before creating new one 
-    // TODO: This could be an assert, but crashing on multiple is not really great, all of them should be cleared if that happens
+    // TODO: This could be an assert, but currently crashing on multiple is not great, all of them should be cleared if that happens
     let aim_entity = entity_query.single();
-        
-    // Clear entity with PlayerAim component
     commands.entity(aim_entity).despawn();
 
-    // NOTE: This is kinda cringe, but is needed to keep Position a Vec3
-    // The calculations could be changed to Vec3's but this is here for now
-    let cursor_pos_vec3 = cursor_query.single().value;
-    let cursor_pos = Vec2::new(cursor_pos_vec3.x, cursor_pos_vec3.y);
+    let cursor_pos = cursor_query.single().value;
+    let player_pos = player_query.single().value;
 
-    let player_pos_vec3 = player_query.single().value;
-    let player_pos = Vec2::new(player_pos_vec3.x, player_pos_vec3.y);
+    let (p1, p2, p3) = weapon.get_aiming_points(player_pos, cursor_pos);
 
-    // the normalized direction vector
-    let dir = (cursor_pos - player_pos).normalize();
-    // the lenght vector
-    let lenght = dir * CONE_LENGTH;
-
-    let cone_edge_1 = player_pos + CONE_HALF_WIDTH * dir.perp() + lenght;
-    let cone_edge_2 = player_pos + (-CONE_HALF_WIDTH * dir.perp()) + lenght;
-
-    // Spawning the aiming triangle 
-    // The points are: Player pos, and the two points `CONE_LENGTH` away (in `dir`` vector direction) 
-    // moved `CONE_HALF_WIDTH` away perpendicular to the end of `lenght` vector.
     // TODO: Don't delete and spawn new entity, just move and rotate the existing one
     commands.spawn((
         MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(meshes.add(Triangle2d::new(player_pos, cone_edge_1, cone_edge_2))),
+            mesh: Mesh2dHandle(meshes.add(Triangle2d::new(p1, p2, p3))),
             material: materials.add(Color::BLUE),
             transform: Transform::from_xyz(0.0, 0.0, -10.0),
             ..Default::default()

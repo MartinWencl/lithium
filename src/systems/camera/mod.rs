@@ -7,8 +7,7 @@ pub struct LithiumCameraSystem;
 impl Plugin for LithiumCameraSystem {
     fn build(&self, app: &mut bevy::prelude::App) {
         app
-            .add_systems(Startup, startup_camera)
-            .add_systems(Update, update_camera);
+            .add_systems(Startup, startup_camera);
     }
 }
 
@@ -16,12 +15,10 @@ fn startup_camera(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), crate::components::player::PlayerCamera {}));
 }
 
-fn update_camera(
-    player_query: Query<&Position, With<Player>>,
-    mut camera_query: Query<&mut Transform, With<PlayerCamera>>,
-) {
-    let player_position = player_query.get_single().unwrap();
-    let mut camera_tranform = camera_query.get_single_mut().unwrap();
-
-    camera_tranform.translation = Vec3::new(player_position.value.x, player_position.value.y, 1.0)
+/// Updates the camera 
+/// NOTE: Updating the camera must happen immediately when the player is updated.
+/// So it's called in the player system. Kept in the camera system for consistency
+pub fn update_camera(player_pos: Vec3, mut camera_transform: Transform)
+{
+    camera_transform.translation = Vec3::new(player_pos.x, player_pos.y, 1.0)
 }

@@ -3,6 +3,7 @@ use systems::LithiumSystemsPlugin;
 
 mod systems;
 mod components;
+mod data;
 pub struct Lithium;
 
 impl Plugin for Lithium {
