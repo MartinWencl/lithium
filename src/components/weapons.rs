@@ -19,7 +19,7 @@ pub struct Weapon {
     /// Critical chance
     crit_chance: f32,
     /// Critical multiplier
-    crit_multiplayer: f32,
+    crit_multiplier: f32,
     /// Length of the aiming triangle
     range: f32,
     /// half-width of the aiming triangle
