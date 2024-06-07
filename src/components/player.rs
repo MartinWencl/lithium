@@ -1,5 +1,8 @@
 use bevy::{ecs::component::Component, input::keyboard::KeyCode, utils::HashMap};
 
+#[derive(Component)]
+pub struct Equipped;
+
 /// Marking the Player
 #[derive(Component)]
 pub struct Player;

@@ -1,11 +1,37 @@
-use bevy::{
-    app::{App, Plugin, Startup, Update}, asset::Assets, ecs::{
-        entity::Entity, query::With, system::{Commands, Query, Res, ResMut}
-    }, math::{primitives::{Cuboid, Triangle2d}, Vec2, Vec3}, render::{color::Color, mesh::Mesh}, sprite::{ColorMaterial, MaterialMesh2dBundle, Mesh2dHandle}, time::Time, transform::components::Transform
-};
-use bevy::utils::default;
+use std::ops::Deref;
 
-use crate::{components::{player::{Actions, Player, PlayerAim, PlayerCamera, PlayerCursor, PlayerKeyboardControls}, weapons::Weapon, Health, Position}, systems::camera::update_camera};
+use bevy::log;
+use bevy::utils::default;
+use bevy::{
+    app::{App, Plugin, Startup, Update},
+    asset::Assets,
+    ecs::{
+        entity::Entity,
+        query::With,
+        system::{Commands, Query, Res, ResMut},
+    },
+    math::{
+        primitives::{Cuboid, Triangle2d},
+        Vec2, Vec3,
+    },
+    render::{color::Color, mesh::Mesh},
+    sprite::{ColorMaterial, MaterialMesh2dBundle, Mesh2dHandle},
+    time::Time,
+    transform::components::Transform,
+};
+
+use crate::{
+    components::{
+        player::{
+            Actions, Equipped, Player, PlayerAim, PlayerCamera, PlayerCursor,
+            PlayerKeyboardControls,
+        },
+        weapons::Weapon,
+        Health, Position,
+    },
+    data::weapons::Weapons,
+    systems::camera::update_camera,
+};
 
 pub struct LithiumPlayerSystem;
 
@@ -25,14 +51,18 @@ fn initiliaze_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    weapons: Res<Weapons>,
 ) {
-    dbg!("Initiliazing player");
-    
-    // Initialize empty PlayerAim entity, so we can query for them in `update_player` consistently
+    // Initialize empty PlayerAim entity, so we can query for it in `update_player` consistently
     commands.spawn((crate::components::player::PlayerAim {},));
 
-    // Initialize the PlayerCursor 
-    commands.spawn((crate::components::player::PlayerCursor {}, Position { value: Vec3::splat(0.0) },));
+    // Initialize the PlayerCursor
+    commands.spawn((
+        crate::components::player::PlayerCursor {},
+        Position {
+            value: Vec3::splat(0.0),
+        },
+    ));
 
     // Inialize the Player
     commands.spawn((
@@ -46,29 +76,41 @@ fn initiliaze_player(
             ..default()
         },
         Player,
-        Position { value: Vec3::splat(0.0) },
+        Position {
+            value: Vec3::splat(0.0),
+        },
         Health::new(100, 1000),
         PlayerKeyboardControls::default(),
     ));
 
-    // TODO: REMOVE - JUST TO SEE MOVEMENT
-    // The test cube
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(meshes.add(Cuboid {
-                half_size: Vec3::new(10.0, 10.0, 0.0),
-            })),
-            material: materials.add(Color::RED),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            ..default()
-        },
-    ));
-}
+    let weapon = weapons
+        .deref()
+        .value
+        .iter()
+        .find(|w| w.name == "Glog".to_string())
+        .unwrap()
+        .clone();
 
+    commands.spawn((Equipped, weapon));
+
+    // HACK: REMOVE - JUST TO SEE MOVEMENT
+    // The test cube
+    commands.spawn((MaterialMesh2dBundle {
+        mesh: Mesh2dHandle(meshes.add(Cuboid {
+            half_size: Vec3::new(10.0, 10.0, 0.0),
+        })),
+        material: materials.add(Color::RED),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        ..default()
+    },));
+    
+    log::info!("Player initialization complete!")
+}
 
 /// Updated the player (Cube)
 /// Calculates the new position based on what key's are pressed and applies the transform
 /// Works of the associated component's (i.e. `Position`, `PlayerKeyboardControls`) insted of getting the data direcly
+#[rustfmt::skip] // NOTE: At least until `let direction = ...` is updated
 fn update_player(
     time: Res<Time>,
     mut query: Query<(&mut Transform, &PlayerKeyboardControls, &mut Position), With<Player>>,
@@ -112,6 +154,7 @@ fn update_player_aim(
     player_query: Query<&Position, With<Player>>,
     cursor_query: Query<&Position, With<PlayerCursor>>,
     entity_query: Query<Entity, With<PlayerAim>>,
+    weapon_query: Query<&Weapon, With<Equipped>>,
 
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -119,9 +162,10 @@ fn update_player_aim(
 ) {
     // HACK: This is a placeholder so that we can use the WeaponStats struct
     // without any weapon systems
-    let weapon = Weapon::new(15.0, 20.0, 0.33, 2.0, 500.0, 200.0, 0.0);
+    let weapon = weapon_query.single();
+    // let weapon = Weapon::new("Grok", 15.0, 20.0, 0.33, 2.0, 500.0, 200.0, 0.0);
 
-    // There should only be one entity, as we clear them before creating new one 
+    // There should only be one entity, as we clear them before creating new one
     // TODO: This could be an assert, but currently crashing on multiple is not great, all of them should be cleared if that happens
     let aim_entity = entity_query.single();
     commands.entity(aim_entity).despawn();

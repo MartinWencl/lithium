@@ -9,40 +9,42 @@ pub struct DamageMultiplier {
     multiplier: f32,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Weapon {
-    name: String,
+    pub name: String,
     /// The lower bound of the damage range
-    damage_low_bound: f32,
+    pub damage_low_bound: f32,
     /// The upper bound of the damage range
-    damage_up_bound: f32,
+    pub damage_up_bound: f32,
     /// Critical chance
-    crit_chance: f32,
+    pub crit_chance: f32,
     /// Critical multiplier
-    crit_multiplier: f32,
+    pub crit_multiplier: f32,
     /// Length of the aiming triangle
-    range: f32,
+    pub range: f32,
     /// half-width of the aiming triangle
-    accuracy: f32,
+    pub accuracy: f32,
     /// Rate at which the aiming triangle shrink when stationary
-    shrink_rate: f32,
+    pub shrink_rate: f32,
 }
 
 impl Weapon {
     pub fn new(
+        name: &str,
         damage_low_bound: f32,
         damage_up_bound: f32,
         crit_chance: f32,
-        crit_multiplayer: f32,
+        crit_multiplier: f32,
         range: f32,
         accuracy: f32,
         shrink_rate: f32,
     ) -> Self {
         Self {
+            name: name.to_string(),
             damage_low_bound,
             damage_up_bound,
             crit_chance,
-            crit_multiplayer,
+            crit_multiplier,
             range,
             accuracy,
             shrink_rate,
@@ -66,7 +68,7 @@ impl Weapon {
 
         // The crit multiplier is multiplicatively combined
         if rng.gen::<f32>() <= self.crit_chance {
-            mutliplier *= self.crit_multiplayer
+            mutliplier *= self.crit_multiplier
         }
         let damage = rng.gen_range(self.damage_low_bound..self.damage_up_bound);
 

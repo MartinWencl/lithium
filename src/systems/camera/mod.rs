@@ -1,6 +1,4 @@
-use bevy::{app::{Plugin, Startup, Update}, core_pipeline::core_2d::Camera2dBundle, ecs::{query::With, system::{Commands, Query}}, math::Vec3, transform::components::Transform};
-
-use crate::components::{player::{Player, PlayerCamera}, Position};
+use bevy::{app::{Plugin, Startup}, core_pipeline::core_2d::Camera2dBundle, ecs::system::Commands, math::Vec3, transform::components::Transform};
 
 pub struct LithiumCameraSystem;
 
