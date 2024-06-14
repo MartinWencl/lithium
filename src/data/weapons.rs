@@ -4,8 +4,7 @@ use bevy::{
     ecs::{
         system::{CommandQueue, Resource},
         world::World,
-    },
-    tasks::AsyncComputeTaskPool,
+    }, log, tasks::AsyncComputeTaskPool
 };
 use sqlx::SqliteConnection;
 
@@ -30,7 +29,7 @@ impl LithiumData for Weapons {
 
             command_queue.push(move |world: &mut World| {
                 world.insert_resource(weapons);
-            })
+            });
         })
     }
 }

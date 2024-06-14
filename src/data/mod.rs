@@ -22,6 +22,7 @@ pub mod weapons;
 //     };
 // }
 
+/// Trait that defines creating a Task<()> for loading data
 pub trait LithiumData {
     fn load(conn: PoolConnection<Sqlite>, thread_pool: &AsyncComputeTaskPool) -> Task<()>;
 }
@@ -31,6 +32,7 @@ pub struct LithiumDataPlugin;
 impl Plugin for LithiumDataPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(bevy::app::Startup, load_data_startup);
+        log::debug!("   - loaded the data plugin");
     }
 }
 
@@ -65,5 +67,5 @@ fn load_data_startup() {
     // NOTE: logic to hide future loading screen here!
     // TODO: Create global boolean resource `is_loaded` and set here
 
-    log::info!("Finished loading resources at startup!");
+    log::debug!("Data Plugin - Finished loading resources at startup!");
 }

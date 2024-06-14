@@ -104,7 +104,7 @@ fn initiliaze_player(
         ..default()
     },));
     
-    log::info!("Player initialization complete!")
+    log::debug!("Player Plugin  - Player initialization complete!")
 }
 
 /// Updated the player (Cube)

@@ -1,4 +1,4 @@
-use bevy::app::Plugin;
+use bevy::{app::Plugin, log};
 
 mod enemies;
 mod input;
@@ -16,5 +16,6 @@ impl Plugin for LithiumSystemsPlugin {
             .add_plugins(enemies::LithiumEnemySystem)
             .add_plugins(camera::LithiumCameraSystem)
             .add_plugins(ui::LithiumUISystem);
+        log::debug!("   - loaded the systems plugins");
     }
 }

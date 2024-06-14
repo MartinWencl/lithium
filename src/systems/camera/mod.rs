@@ -1,4 +1,4 @@
-use bevy::{app::{Plugin, Startup}, core_pipeline::core_2d::Camera2dBundle, ecs::system::Commands, math::Vec3, transform::components::Transform};
+use bevy::{app::{Plugin, Startup}, core_pipeline::core_2d::Camera2dBundle, ecs::system::Commands, log, math::Vec3, transform::components::Transform};
 
 pub struct LithiumCameraSystem;
 
@@ -11,6 +11,7 @@ impl Plugin for LithiumCameraSystem {
 
 fn startup_camera(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), crate::components::player::PlayerCamera {}));
+    log::debug!("Camera Plugin - Camera spawned")
 }
 
 /// Updates the camera 
